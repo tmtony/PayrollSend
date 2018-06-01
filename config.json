@@ -5,7 +5,7 @@
   "appDb" : "NjdjNWE2MjY3YzU5",
   "isDev" : false,
   "feedbackUrl" : "https://support.qq.com/products/24146",
-  "bindPage" : false,
+  "bindPage" : true,
   "title" : "工资条群发助手",
   "icon-s" : "icon_s.png",
   "icon" : "icon.png"
