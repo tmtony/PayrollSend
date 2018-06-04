@@ -39,14 +39,16 @@ module KSO_SDK::View
 
     attr_writer :onAddToolButton, :onShowToolbarTip, :onSetStatus
     attr_accessor :show_button, :title
+    attr_accessor :info_collect
 
     define_label :background, :alert, :tip_line, :tip_picture
     define_button :close_button, :add_tool_button, :tip_button
 
-    def initialize(title, scale, parent)
+    def initialize(title, scale, parent, info_collect)
       super(parent)
 
-      self.title =  title
+      self.title = title
+      self.info_collect = info_collect
 
       setWindowFlags(Qt::FramelessWindowHint | Qt::DialogType)
       # setWindowFlags(Qt::FramelessWindowHint | Qt::DialogType | Qt::WindowSystemMenuHint | Qt::WindowStaysOnTopHint)      
@@ -124,7 +126,7 @@ module KSO_SDK::View
       self.setVisible(false)
       @onAddToolButton.call(self) unless @onAddToolButton.nil?
       @onSetStatus.call(false) unless @onSetStatus.nil?      
-      KSO_SDK::Web::Internal::infoCollect({:action=>"script_fav_ribbon"})
+      info_collect.infoCollect({:action=>"script_fav_ribbon"})
     end
 
     def showToolbarTip
@@ -155,7 +157,7 @@ module KSO_SDK::View
 
     def closeClicked
       self.setVisible(false)
-      KSO_SDK::Web::Internal::infoCollect({:action=>"script_fav_close"})
+      info_collect.infoCollect({:action=>"script_fav_close"})
     end
 
   end
@@ -168,15 +170,17 @@ module KSO_SDK::View
 
     attr_writer :onClose, :onAddTool, :onNotAddTool, :onClosePane, :onSetStatus
     attr_accessor :scale
+    attr_accessor :info_collect
 
     define_label :tip_picture, :tip_line, :button_picture, :button_title, :menu_text, :bulb_picture
     define_button :close_button, :add_tool_button
     define_radio_button :add_toolbar_radio, :not_need_tool_radio
 
-    def initialize(title, icon, scale, parent = nil)
+    def initialize(title, icon, scale, info_collect, parent = nil)
       super(parent)
 
       self.scale = scale
+      self.info_collect = info_collect
 
       setAttribute(Qt::WA_DeleteOnClose, false)
       setWindowFlags(Qt::FramelessWindowHint | Qt::DialogType)
@@ -245,11 +249,19 @@ module KSO_SDK::View
     def setToolButton
       font_size = 14 * scale
       add_tool_button.setText("确定")
-      add_tool_button.setStyleSheet(
-        "QPushButton {
-          background: rgb(97, 153, 242);
-          border: none;
-          color:rgb(255, 255, 255); font-family: \"微软雅黑\"; font-size:#{font_size}px;}")
+      if KSO_SDK::isEt
+        add_tool_button.setStyleSheet(
+          "QPushButton {
+            background: rgb(80, 179, 121);
+            border: none;
+            color:rgb(255, 255, 255); font-family: \"微软雅黑\"; font-size:#{font_size}px;}")
+      else
+        add_tool_button.setStyleSheet(
+          "QPushButton {
+            background: rgb(97, 153, 242);
+            border: none;
+            color:rgb(255, 255, 255); font-family: \"微软雅黑\"; font-size:#{font_size}px;}")
+      end
       add_tool_button.setCursor(Qt::Cursor.new(Qt::PointingHandCursor))
       add_tool_button.onClicked = :addToolClicked
     end
@@ -261,10 +273,10 @@ module KSO_SDK::View
     def addToolClicked
       if add_toolbar_radio.isChecked
         @onAddTool.call(self) unless @onAddTool.nil?
-        KSO_SDK::Web::Internal::infoCollect({:action=>"script_close_ribbon"})
+        info_collect.infoCollect({:action=>"script_close_ribbon"})
       else
         @onNotAddTool.call(self) unless @onNotAddTool.nil?
-        KSO_SDK::Web::Internal::infoCollect({:action=>"script_close_never"})
+        info_collect.infoCollect({:action=>"script_close_never"})
       end
 
       setStatus(false)
@@ -373,11 +385,15 @@ module KSO_SDK::View
     attr_accessor :title_bar
 
     attr_accessor :onCloseClicked
+    attr_accessor :info_collect
     attr_reader :context
 
     def initialize(title, parent, context)
       super(title, parent)
       @context = context
+      self.info_collect = KSO_SDK::Web::InfoCollect.new
+      info_collect.context = context
+
       self.scale = KxWebViewWidget::dpiScaled(1.0)
       # self.layout = Qt::VBoxLayout.new()
       self.layout.setContentsMargins(0, 0, 0, 0)
@@ -402,7 +418,7 @@ module KSO_SDK::View
       font.setFamily("微软雅黑")
       setFont(font)
 
-      self.title_bar = TaskPaneTitle.new(title, scale, self)
+      self.title_bar = TaskPaneTitle.new(title, scale, self, info_collect)
       title_bar.onClosePane = method(:closeClicked)
       setTitleBarWidget(title_bar)
       setUpFavoriteButton()
@@ -491,7 +507,8 @@ module KSO_SDK::View
       if !getShowButton
         if self.close_confirm_form.nil?
           self.close_confirm_form = CloseConfirmForm.new(
-            windowTitle, "#{File.join(@context.resPath, @context.icon)}", scale, KSO_SDK.getCurrentMainWindow())
+            windowTitle, "#{File.join(@context.resPath, @context.icon)}", 
+            scale, info_collect, KSO_SDK.getCurrentMainWindow())
           self.close_confirm_form.onClosePane = method(:closePane)
           self.close_confirm_form.onClose = method(:closeConfirm)
           self.close_confirm_form.onAddTool = method(:addTool)
@@ -508,15 +525,14 @@ module KSO_SDK::View
         self.close_confirm_form.setVisible(true)
         self.confirm_grey_form.setVisible(true)
       else
-        puts "call getTipCount"
-        puts getTipCount
         if getTipCount < 3 
           showToolbarTip
           incTipCount
         end
         self.setVisible(false)
         @onCloseClicked.call() unless @onCloseClicked.nil?
-        KSO_SDK::Web::Internal::infoCollect({:action=>"script_close"})
+        context.removeBindingPage(KSO_SDK::activePage()) unless KSO_SDK::activePage().nil?
+        info_collect.infoCollect({:action=>"script_close"})
       end
       KSO_SDK.getCurrentMainWindow().installEventFilter(self)
     end
@@ -543,6 +559,7 @@ module KSO_SDK::View
       confirm_grey_form.setVisible(false) unless confirm_grey_form.nil?
       sender.setVisible(false)
       self.setVisible(false)
+      context.removeBindingPage(KSO_SDK::activePage()) unless KSO_SDK::activePage().nil?
     end
 
     def closeConfirm(sender)
@@ -565,6 +582,26 @@ module KSO_SDK::View
       super(o, e)
     end
 
+    def setVisible(visible)
+      super(visible)
+
+      if !self.close_confirm_form.nil?
+        if visible
+          if !@close_confirm_form_visible.nil? && @close_confirm_form_visible
+            self.close_confirm_form.setVisible(visible)
+            self.confirm_grey_form.setVisible(visible)
+            @close_confirm_form_visible = nil
+          end
+        else
+          if self.close_confirm_form.visible
+            @close_confirm_form_visible = true
+            self.close_confirm_form.setVisible(visible)
+            self.confirm_grey_form.setVisible(visible)
+          end
+        end
+      end
+    end
+
   end
 
   SW_SHOWNORMAL = 1
@@ -579,10 +616,11 @@ module KSO_SDK::View
     define_label :title_label
     define_button :close_button, :feedback_button, :add_to_toolbar_button
 
-    def initialize(title, scale, parent)
+    def initialize(title, scale, parent, info_collect)
       super(parent)
       self.title = title
       self.scale = scale
+      self.info_collect = info_collect
 
       feedback_button.setFixedSize(Qt::Size.new(21 * scale, 21 * scale))
       feedback_button.setStyleSheet(
@@ -634,7 +672,7 @@ module KSO_SDK::View
         shell = WIN32OLE.new('Shell.Application')
         shell.ShellExecute(@feedbackUrl, '', '', 'open', SW_SHOWNORMAL)
       end
-      KSO_SDK::Web::Internal::infoCollect({:action=>"script_feedback"})
+      info_collect.infoCollect({:action=>"script_feedback"})
     end
 
     def closeClicked
@@ -647,7 +685,7 @@ module KSO_SDK::View
     def onAddToBoolbarClicked
       if self.assistant_popup.nil?
           self.assistant_popup = AssistantPopup.new(
-            title, scale, self.parent)
+            title, scale, self.parent, info_collect)
           assistant_popup.onAddToolButton = self.parent.method(:addToolButton)
         assistant_popup.onShowToolbarTip = self.parent.method(:showToolbarTip)
         assistant_popup.onSetStatus = self.parent.method(:setStatus)        
@@ -655,7 +693,7 @@ module KSO_SDK::View
       assistant_popup.setShowButton(self.show_button)
       assistant_popup.show
       setAssistantPopupGeometry
-      KSO_SDK::Web::Internal::infoCollect({:action=>"script_fav"})
+      info_collect.infoCollect({:action=>"script_fav"})
     end
 
     def setAssistantPopupGeometry

@@ -22,7 +22,8 @@ module KSO_SDK::Web
     end
 
     def getAppInfo()
-      json_result = {:app_type => KSO_SDK::getAppType, :script_id => context.scriptId, :app_id => context.appId, :title => context.title}
+      json_result = {:app_type => KSO_SDK::getAppType, :script_id => context.scriptId, 
+        :app_id => context.appId, :title => context.title}
       return json_result.to_json()
     end
 
