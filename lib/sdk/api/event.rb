@@ -54,7 +54,7 @@ module KSO_SDK
     # 绑定文档切换
     def bindActive(&block)
       @activeEvent.connect do | page, wa |
-        block.call(KSO_SDK::activePage().FullName)
+        block.call(KSO_SDK::activePage())
       end
     end
 

@@ -85,15 +85,14 @@ module KSO_SDK
 
       startedPage = KSO_SDK::activePage()
       return if startedPage.nil?
-      bindFullName = startedPage.FullName
-      app.context.addBindingFile(bindFullName)
+      app.context.addBindingPage(startedPage)
       pageEvent = PageEvent.new()
-      pageEvent.bindActive do | fullname |
-        current = app.context.hasBindingFile(fullname)
+      pageEvent.bindActive do | page |
+        current = app.context.hasBindingPage(page)
         app.setVisible(current)
       end
 
-      return if bindFullName.nil?
+      return if startedPage.nil?
       pageEvent.bindClose startedPage do ||
         pageEvent.unbindActive()
         app.setVisible(false)
@@ -113,7 +112,6 @@ module KSO_SDK
     def newTaskPane(context)
       @taskPane = KSO_SDK::View::TaskPane.new(context.title, KSO_SDK.getCurrentMainWindow(), context)
       @taskPane.onCloseClicked = lambda do
-        klog "close"
         self.onClose()
       end
       @taskPane.setFeedbackUrl(context.feedbackUrl) unless context.feedbackUrl.nil?
@@ -133,22 +131,27 @@ module KSO_SDK
   public
     attr_accessor :app
 
-    def hasBindingFile(filename)
-      return false if @binding_file_list.nil?
-      @binding_file_list.each do |file|
-        return true if file.eql?(filename)
+    def hasBindingPage(page)
+      return false if @binding_page_list.nil?
+      @binding_page_list.each do |item|
+        # puts page.objec_id
+        # puts item.objec_id
+        return true if item.FullName().eql?(page.FullName())
       end
       return false
     end
 
-    def addBindingFile(filename)
-      return if hasBindingFile(filename)
-      @binding_file_list = [] if @binding_file_list.nil?
-      @binding_file_list << filename
+    def addBindingPage(page)
+      return if hasBindingPage(page)
+      @binding_page_list = [] if @binding_page_list.nil?
+      @binding_page_list << page
     end
 
-    def removeBindingFile(filename)
-      return if !hasBindingFile(filename) || @binding_file_list.nil?
+    def removeBindingPage(page)
+      return if !hasBindingPage(page) || @binding_page_list.nil?
+      puts @binding_page_list.inspect
+      @binding_page_list.delete_if { |item| item.FullName().eql?(page.FullName()) }
+      puts @binding_page_list.inspect
     end
 
   end
@@ -329,7 +332,7 @@ module KSO_SDK
     @applist.each do |key, app|
       if key.appId == context.appId
         if context.bindPage
-          return app if !KSO_SDK::activePage().nil? && app.context.hasBindingFile(KSO_SDK::activePage().FullName)
+          return app if !KSO_SDK::activePage().nil? && app.context.hasBindingPage(KSO_SDK::activePage())
         else
           return app
         end

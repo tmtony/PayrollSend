@@ -55,7 +55,6 @@ module KSO_SDK::Web
       end
       
       def finished(reply)
-        puts "call finished"
         if reply.error != Qt::NetworkReply::NoError
           puts "reply error is #{reply.error}"
         end
@@ -75,7 +74,6 @@ module KSO_SDK::Web
         url += "&app_id="
         url += app_id.to_s
 
-        puts url
         request = Qt::NetworkRequest.new(Qt::Url.new(url))
         cookie = "wps_sid=#{KSO_SDK::getCloudService().getUserInfo().sessionId};"
         request.setRawHeader(Qt::ByteArray.new('Cookie'), Qt::ByteArray.new(cookie)) if KSO_SDK::getCloudService().getUserInfo().logined
@@ -94,13 +92,16 @@ module KSO_SDK::Web
     #
     # url: 支付地址
     def showPayDlg(url)
-      checkPayDlg
+      @pay_dlg = nil unless @pay_dlg.nil?
+      @pay_dlg = PayDlg.new(@webWidget)
+      @pay_dlg.rubyPayed = lambda do | methodName, params |
+        onRubyPayed(methodName, params)
+      end
       @pay_dlg.showWindow(url) if !url.nil?
       nil
     end
 
     def closePay(order_id, sign)
-      puts "call closePay"
       checkPayAssistant()
       @pay_assistant.closePay(order_id, sign, context.appId)
       nil
@@ -117,23 +118,12 @@ module KSO_SDK::Web
       @pay_assistant = Internal::PayAssistant.new if @pay_assistant.nil?
       @pay_assistant.onFinished = lambda do |params|
         finished(params)
-      end
-    
-    end
-
-    def checkPayDlg
-      if @pay_dlg.nil?
-        @pay_dlg = PayDlg.new(@webWidget)
-        @pay_dlg.rubyPayed = lambda do | methodName, params |
-          onRubyPayed(methodName, params)
-        end
-      end
+      end    
     end
 
     private
 
     def finished(params)
-      puts params
       callbackToJS("onClosePay", params)
       nil
     end

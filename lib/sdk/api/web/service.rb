@@ -88,7 +88,8 @@ module KSO_SDK::Web
 
     def dbCreatUniqueFileId(context = nil)
       hash = baseInfo
-      dbGet(toUrl("getfileid?", hash.sort), context)
+      # dbGet(toUrl("getfileid?", hash.sort), context)
+      dbGet(toUrl("getfileid", hash.sort), context)
     end
 
     def dbPostData(file_id: nil, table:, key:, value:, include_user: false, context: nil)
@@ -157,6 +158,7 @@ module KSO_SDK::Web
       end
 
       url = assistant.makeUrl(head, Qt::Variant.new(keys), Qt::Variant.new(values))
+      assistant.post(head, Qt::Variant.new(keys), Qt::Variant.new(values))
       return url
     end
 
@@ -175,6 +177,8 @@ module KSO_SDK::Web
     def checkAssistant
       if self.assistant.nil?
         self.assistant = KSmokeDbAssistant.new("http://assist.docer.wps.cn/mongotest/")
+        # connect(self.assistant, SIGNAL('finished(QNetworkReply *)'),
+        #   @impl, SLOT('onFinished(QNetworkReply *)'))
       end
     end
     
