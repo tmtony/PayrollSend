@@ -1,4 +1,4 @@
-# WPS Office Ruby SDK开发文档
+# WPS Office Ruby SDK开发文档  180606
 
 ## JS接口
 
