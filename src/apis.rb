@@ -1772,12 +1772,12 @@ module SalaryMailPlugin
           result["msg"]="保存工资表头成功！"
         else
           result["result"]="error"
-          result["msg"]="保存工资表头出错！"
+          result["msg"]="保存工资表头出错2！"
         end
 
       rescue Exception => e
         result['result']="error"
-        result['msg']="保存工资表头出错"
+        result['msg']="保存工资表头出错3"
         puts ("出错信息:"+e.message)
         puts ("出错位置:"+e.backtrace.inspect)
       ensure
@@ -2368,12 +2368,17 @@ module SalaryMailPlugin
  
 
         rng=GetRange()
- 
+        if rng.Rows.count>40
+            result['result']="error"
+            result['msg']="选择工资项目标题太多行" 
+            return result.to_json
+        end  
+
         arrLog=createJson(rng, true)
         data={}
         data["list"]=arrLog
         result["data"]=data
-
+         
 
         sheet=AddWorkSheet('KSO_Salary_Config',false,true)
         if !sheet.nil?
