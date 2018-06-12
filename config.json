@@ -1,0 +1,12 @@
+{
+  "appId" : "NjdjNWE2MjY3YzU5",
+  "scriptId" : "1",
+  "appDb" : "NjdjNWE2MjY3YzU5",
+  "dbService" : "http://assist.docer.wps.cn/mongotest/",
+  "isDev" : false,
+  "feedbackUrl" : "https://support.qq.com/products/24146",
+  "bindPage" : true,
+  "title" : "工资条群发助手",
+  "icon" : "icon.png",
+  "action" : "payroll"
+}
