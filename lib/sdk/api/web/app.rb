@@ -27,6 +27,17 @@ module KSO_SDK::Web
       return json_result.to_json()
     end
 
+    # def onUnDo(name, func)
+    #   KSO_SDK::Application.OnUndo(name, "func")
+
+    #   @apiApp = WIN32OLE::setdispatch(KxWin32ole::getDispatch)
+    #   @ev = WIN32OLE_EVENT.new(@apiApp.ActiveSheet)
+    #   @ev.on_event('func') {onWindowActivate()}    
+    # end
+
+    # def onWindowActivate()
+    #   puts "call onWindowActivate"
+    # end
   end
 
 end

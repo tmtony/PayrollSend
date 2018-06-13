@@ -328,7 +328,7 @@ module KSO_SDK
   StartShow = "start_show" # 是否自启动
   Title = "title"
   # 配置文件必填项
-  RequireFields = [:appId, :scriptId, :appDb, :feedbackUrl, :feedbackUrl, :isDev, :bindPage, :title, :icon, :action, :dbService]
+  RequireFields = [:appId, :scriptId, :appDb, :feedbackUrl, :shareUrl, :isDev, :bindPage, :title, :icon, :action, :dbService]
 
   # :nodoc:
   # 根据config.json生成context

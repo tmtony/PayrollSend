@@ -1,4 +1,5 @@
 ﻿require_relative '../api/settings'
+require 'uri'
 
 module KSO_SDK::View
 
@@ -153,6 +154,119 @@ module KSO_SDK::View
         add_tool_button.setVisible(true)
         tip_picture.setVisible(true)
       end
+    end
+
+    def closeClicked
+      self.setVisible(false)
+      info_collect.infoCollect({:action=>"script_fav_close"})
+    end
+
+  end
+
+  SharePopupWidth = 322
+  SharePopupHeight = 111
+
+  class SharePopup < FormWindow
+
+    attr_accessor :title, :info_collect
+    define_label :background_picture_label, :lightTip_label, :shareOthers_label, :detail_label, :url_label
+    define_button :close_button, :urlCopy_button
+
+    def initialize(title, scale, parent, info_collect)
+      super(parent)
+
+      self.title = title
+      self.info_collect = info_collect
+
+      setWindowFlags(Qt::FramelessWindowHint | Qt::DialogType)
+      setAttribute(Qt::WA_TranslucentBackground)
+     # setStyleSheet("QWidget#background_picture_label { border: none;}")
+
+      width = SharePopupWidth * scale
+      height = SharePopupHeight * scale
+
+      background_picture_label.setGeometry(0, 0, width, height)
+      pixmap = Qt::Pixmap.new
+      pixmap.load(":images/bg_share.png")
+      background_picture_label.setPixmap(pixmap.scaled(width, height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation))
+      background_picture_label.setVisible(true)
+
+      pixmap = Qt::Pixmap.new
+      pixmap.load(":images/gray.png")
+      lightTip_label.setPixmap(pixmap.scaled(16 * scale, 16 * scale, Qt::IgnoreAspectRatio, Qt::SmoothTransformation))
+      lightTip_label.setGeometry(16 * scale, 16.1 * scale, 16 * scale, 16 * scale)
+      lightTip_label.setVisible(true)
+
+      font_size = 12 * scale
+      shareOthers_label.setText("分享给其他人")
+      shareOthers_label.setStyleSheet("QLabel {
+        color:rgb(34, 34, 38); font-family: \"微软雅黑\"; font-size:#{font_size}px;}")
+      shareOthers_label.setGeometry(39 * scale, 16 * scale, 263 * scale, 16 * scale)
+
+
+      detail_label.setText("在电脑上打开链接，启动WPS自动下载助手")
+      detail_label.setStyleSheet("QLabel {
+        color:rgb(136, 136, 136); font-family: \"微软雅黑\"; font-size:#{font_size}px;}")
+      detail_label.setGeometry(39 * scale, 33.3 * scale, 263 * scale, 16 * scale)
+
+
+      close_button.setFixedSize(Qt::Size.new(16 * scale, 16 * scale))
+      close_button.onClicked = :closeClicked
+      close_button.setGeometry(295 * scale, 11 * scale, 16 * scale, 16 * scale)
+      close_button.setToolTip("关闭")
+      close_button.instance_eval ("
+        PADDINGW1 = 5 * scale   #左上角为第一个点
+        PADDINGH1 = 4 * scale
+        PADDINGW1COR = 4 * scale  #跟第一个点对应的点
+        PADDINGH1COR = 5 * scale
+
+        PADDINGW2 = 5 * scale   #左下角为第二个点
+        PADDINGH2 = 5 * scale
+        PADDINGW2COR = 4 * scale  #跟第二个点对应的点
+        PADDINGH2COR = 4 * scale
+
+        def paintEvent(event)
+          @painter = Qt::Painter.new if @painter.nil?
+          @painter.begin(self)
+          @painter.setPen(Qt::Pen.new(Qt::Color.new(162, 162, 162)))
+          @painter.drawLine(PADDINGW1, PADDINGH1, width() - PADDINGW1COR, height() - PADDINGH1COR)
+          @painter.drawLine(PADDINGW2, height() - PADDINGH2, width() - PADDINGW2COR, PADDINGH2COR)
+          @painter.end
+        end"
+                                 )
+
+
+      url_label.setGeometry(39 * scale, 59 * scale, 195 * scale, 27 * scale)
+      url_label.setStyleSheet("QLabel {
+        color:rgb(136, 136, 136); font-family: \"微软雅黑\"; font-size:#{font_size}px;
+        background-color:#F5F5F5;
+        border-width:1px; border-color:#E5E5E5; border-style:solid ;border-radius:2px}")
+
+
+      urlCopy_button.setGeometry(234 * scale, 59 * scale, 70 * scale, 27 * scale)
+      urlCopy_button.setText("复制链接")
+      urlCopy_button.setStyleSheet("QPushButton {
+        font-family: MicrosoftYaHei;
+        font-size: 12px;
+        color: #888888;
+        letter-spacing: 0.8px;
+        text-align: center;
+        background-color:#FFFFFF;
+        border-width:1px; border-color:#E5E5E5; border-style:solid; border-left:none;
+        padding-top:5px; padding-left:9px; padding-right:9px; padding-bottom:6px}")
+      urlCopy_button.onClicked = :copyClicked
+    end
+
+    def setShareUrlText(url)
+      encodeUrl = URI.encode_www_form_component(url)
+      url = "http://open.docer.wps.cn/#/share?open_assistant_url=" + encodeUrl
+      url_label.setText(url)
+    end
+
+    def copyClicked()
+      clipboard = Qt::Application::clipboard()
+      clipboard.setText(url_label.text())
+      self.setVisible(false)
     end
 
     def closeClicked
@@ -419,6 +533,7 @@ module KSO_SDK::View
       setFont(font)
 
       self.title_bar = TaskPaneTitle.new(title, scale, self, info_collect)
+      title_bar.shareUrl = context.shareUrl
       title_bar.onClosePane = method(:closeClicked)
       setTitleBarWidget(title_bar)
       setUpFavoriteButton()
@@ -603,6 +718,7 @@ module KSO_SDK::View
       end
 
       title_bar.setAssistantPopupVisible(visible)
+      title_bar.setSharePopupVisible(visible)
     end
 
   end
@@ -613,11 +729,11 @@ module KSO_SDK::View
   class TaskPaneTitle < FormWindow
 
     attr_writer :feedbackUrl
-    attr_accessor :title, :show_button, :onClosePane, :assistant_popup, :info_collect
+    attr_accessor :title, :show_button, :onClosePane, :assistant_popup, :info_collect, :share_popup, :shareUrl
     attr_accessor :scale
 
     define_label :title_label
-    define_button :close_button, :feedback_button, :add_to_toolbar_button
+    define_button :close_button, :feedback_button, :add_to_toolbar_button, :share_button
 
     def initialize(title, scale, parent, info_collect)
       super(parent)
@@ -656,7 +772,18 @@ module KSO_SDK::View
       close_button.setToolTip("关闭")
       close_button.instance_eval(DRAW_CLOSE_BUTTON_SCRIPT)      
       close_button.setGeometry(parent.width - 25 * scale, 10 * scale, 21 * scale, 21 * scale)
+
+      share_button.setFixedSize(Qt::Size.new(21 * scale, 21 * scale))
+      share_button.setStyleSheet(
+          "QPushButton {border:0px;border-image:url(:images/ic_share_normal.png);}
+           QPushButton:hover {border:0px;border-image:url(:images/ic_share_hover.png);}")
+      share_button.setCursor(Qt::Cursor.new(Qt::PointingHandCursor))
+      share_button.setToolTip("分享提示")
+      share_button.onClicked = :onShareClicked
+      share_button.setGeometry(parent.width - 82 * scale, 9 * scale, 21 * scale, 21 * scale)
+      share_button.setVisible(false)
     end
+
 
     def sizeHint
       return Qt::Size.new(30, 40 * scale)
@@ -711,6 +838,28 @@ module KSO_SDK::View
       end
     end
 
+    def onShareClicked
+      if self.share_popup.nil?
+        self.share_popup = SharePopup.new(
+            title, scale, self.parent, info_collect)
+      end
+      share_popup.setShareUrlText(shareUrl)
+      share_popup.show
+      setSharePopupGeometry
+    end
+
+    def setSharePopupGeometry
+      return if self.share_popup.nil?
+      if self.share_popup.isVisible
+        point = self.mapToGlobal(Qt::Point.new(0, 0))
+        self.share_popup.setGeometry(
+            point.x + (self.width - SharePopupWidth * scale) / 2,
+            point.y + 39 * scale,
+            SharePopupWidth * scale,
+            SharePopupHeight * scale)
+      end
+    end
+
     def setAssistantPopupVisible(visible)
       return if assistant_popup.nil?
       if visible
@@ -722,6 +871,21 @@ module KSO_SDK::View
         if assistant_popup.visible
           @assistant_popup_visible = true
           assistant_popup.setVisible(visible)
+        end
+      end
+    end
+
+    def setSharePopupVisible(visible)
+      return if share_popup.nil?
+      if visible
+        if !share_popup.nil? && @share_popup_visible
+          share_popup.setVisible(visible)
+          @share_popup_visible = nil
+        end
+      else
+        if share_popup.visible
+          @share_popup_visible = true
+          share_popup.setVisible(visible)
         end
       end
     end
@@ -747,7 +911,8 @@ module KSO_SDK::View
 
     def eventFilter(o, e)
       if e.type == Move || e.type == Resize
-        setAssistantPopupGeometry 
+        setAssistantPopupGeometry
+        setSharePopupGeometry
         close_button.setGeometry(parent.width - 25 * scale, 10 * scale, 21 * scale, 21 * scale)
         add_to_toolbar_button.setGeometry(parent.width - 51 * scale, 9 * scale, 21 * scale, 21 * scale)
       end
@@ -755,5 +920,5 @@ module KSO_SDK::View
       super(o, e)
     end
   end
-
 end
+

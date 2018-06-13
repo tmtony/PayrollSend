@@ -256,7 +256,14 @@ module KSO_SDK::Web
     # 弹出WebView框体
     # posType: 'main_window_center':居中主窗体，'edit_window_center':居中工作面板(文档面板),'current_sub_window_client':铺满工作面板(文档面板)
     def navigateOnNewWidget(url:, width:500, height:500, bModal:false, closeBtn:false, posType: 'main_window_center')
-      navigateNewWidget(:show_modal, url, 0, 0, width, height, posType, false, closeBtn)
+      navigateNewWidget(:show_modal, url, 
+        0,          # left
+        0,          # top
+        width, 
+        height, 
+        posType, 
+        false,      # show_waiting
+        closeBtn)
     end
 
     def navigateOnShowWidget(url, left, top, width, height, position_type, show_waiting)

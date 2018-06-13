@@ -24,9 +24,25 @@ module SalaryMailPlugin
       if @web.nil?
         @web = KSO_SDK::View::WebViewWidget.new(context)
         @web.showUrl(File.dirname(__FILE__) + '\web\index.html')
-        @web.registerJsApi(Sample.new())
+        jsApi = Sample.new()
+        @web.registerJsApi(jsApi)
+        $apiObjectHelper ||= ApiObjectHelper.new
+        $apiObjectHelper.addApi(jsApi)
+
+        puts $apiObjectHelper
+        #问题2 Office事件处理，主要处理工作簿和工作表的事件，用SDK后应该如何处理，要传递一个jsApi参数？
+        @officeApi ||= OfficeApi.new(@web, jsApi, self)  #@jsObj
       end
       setContentWidget(@web)
+    end
+
+    def canRun()
+      return false if !super()
+      if (defined? (KSmokeDbAssistant))
+        return true
+      else
+        return false
+      end
     end
 
   end

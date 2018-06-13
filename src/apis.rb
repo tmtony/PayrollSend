@@ -647,7 +647,7 @@ module SalaryMailPlugin
               if sheet.Cells(3, 2).value != ''
  
                 param['smtpserver']=sheet.Cells(3, 2).value
-                param['port']=sheet.Cells(4, 2).value
+                param['port']=sheet.Cells(4, 2).value.to_i
 
  
                 settings.setRegValue('smtpserver', param['smtpserver'].to_s)
@@ -711,7 +711,7 @@ module SalaryMailPlugin
         account=settings.getRegValue('address').toString
         pwd=settings.getRegValue('password').toString 
         host=settings.getRegValue('smtpserver').toString 
-        port=settings.getRegValue('port').toString 
+        port=settings.getRegValue('port').toString.to_i.to_s 
 
  
         if !host.nil?
@@ -2141,7 +2141,7 @@ module SalaryMailPlugin
         account=settings.getRegValue('address').toString
         pwd=settings.getRegValue('password').toString 
         host=settings.getRegValue('smtpserver').toString 
-        port=settings.getRegValue('port').toString  
+        port=settings.getRegValue('port').toString.to_i.to_s   
         
 
         sheet=AddWorkSheet('KSO_Salary_Config',false,false)
