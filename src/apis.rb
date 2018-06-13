@@ -634,7 +634,7 @@ module SalaryMailPlugin
 
         settings =KRubyAccountEmailSettings.new  
         param['smtpserver']=settings.getRegValue('smtpserver').toString
-        param['port']=settings.getRegValue('port').toString 
+        param['port']=settings.getRegValue('port').toString.to_i.to_s 
  
         if param['smtpserver'].nil? or param['smtpserver']== ''  #如果没有，取旧版的配置
            
