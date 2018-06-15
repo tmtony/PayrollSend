@@ -1387,17 +1387,19 @@ module SalaryMailPlugin
             endRow=salarySheet.Cells(20000, nameCol).End(-4162).Row #dataEndRow=sheet.Cells(65536, nameCol).End(3).Row
             endRow=10000 if endRow>10000
             while startRow<=endRow
-              item={}
-              item["id"]=startRow
-              item["name"]=salarySheet.Cells(startRow, nameCol).value.to_s
+             if salarySheet.Cells(startRow, 1).EntireRow.Hidden==false	
+	              item={}
+	              item["id"]=startRow
+	              item["name"]=salarySheet.Cells(startRow, nameCol).value.to_s
 
-              # todo address 在表格中是空值，返回结果是表列名
-              item["address"]=salarySheet.Cells(startRow, nameCol).address.to_s
-              # p startRow
-              # p item["name"]
-              item["email"]=salarySheet.Cells(startRow, emailCol).value.to_s
-              item["selected"]=true
-              arrLog.push(item)
+	              # todo address 在表格中是空值，返回结果是表列名
+	              item["address"]=salarySheet.Cells(startRow, nameCol).address.to_s
+	              # p startRow
+	              # p item["name"]
+	              item["email"]=salarySheet.Cells(startRow, emailCol).value.to_s
+	              item["selected"]=true
+	              arrLog.push(item)
+	          end
               startRow+=1
             end
             result['result']="ok"
