@@ -1826,7 +1826,7 @@ module SalaryMailPlugin
       ensure
        
         subject="您当月的工资条" if subject.nil? or subject==""
-        header="{#姓名#}，您好，以下是您的工资单，请查收！" if header.nil?  or header==""
+        header="您好，以下是您的工资单，请查收！" if header.nil?  or header==""
         footer="<br>祝好！<br>此工资条仅供员工本人浏览，如有任何疑问，请及时与人力资源部薪酬组联系！<br>" if footer.nil? or footer==""
         result['subject']=subject
         result['header']=header
@@ -2158,7 +2158,7 @@ module SalaryMailPlugin
           # host=sheet.Cells(3, 2).value.to_s
           # port=sheet.Cells(4, 2).value.to_i.to_s #变成了25.0 保存前加 '
           header=sheet.Cells(25, 2).value
-          header=header.gsub("{#姓名#}","#{name}")
+         # header=header.gsub("{#姓名#}","#{name}")
 
           footer=sheet.Cells(26, 2).value
         end
