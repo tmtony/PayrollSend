@@ -744,8 +744,8 @@ module SalaryMailPlugin
                                      :domain => 'localhost.localdomain',
                                      :user_name => account,
                                      :password => pwd,
-                                     :open_timeout         => 8,
-                                     :read_timeout         =>8,
+                                     :open_timeout         => 15,
+                                     :read_timeout         =>15,
                                      :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                                     }
                     )
@@ -763,8 +763,8 @@ module SalaryMailPlugin
                                    :ssl => isssl,
                                    :authentication       => 'login',
                                    :enable_starttls_auto => true,
-                                   :open_timeout         => 8,
-                                   :read_timeout         =>8,
+                                   :open_timeout         => 15,
+                                   :read_timeout         =>15,
                                    :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                                   }
                   )
@@ -1809,6 +1809,7 @@ module SalaryMailPlugin
           bodytype=sheet.Cells(27, 2).value  #邮件内容类型
           attachpic=sheet.Cells(28, 2).value #是否带图片附件
           hlayout=sheet.Cells(23, 2).value #是否横向工资条
+
         end
 
         result["result"]="ok"
@@ -1821,9 +1822,10 @@ module SalaryMailPlugin
         puts ("出错位置:"+e.backtrace.inspect)
 
       ensure
-
-        header="您好，以下是您的工资单，请查收！" if header.nil?
-        footer="<br>祝好！<br>此工资条仅供员工本人浏览，如有任何疑问，请及时与人力资源部薪酬组联系！<br>" if footer.nil?
+       
+        subject="您当月的工资条" if subject.nil? or subject==""
+        header="{#姓名#}，您好，以下是您的工资单，请查收！" if header.nil?  or header==""
+        footer="<br>祝好！<br>此工资条仅供员工本人浏览，如有任何疑问，请及时与人力资源部薪酬组联系！<br>" if footer.nil? or footer==""
         result['subject']=subject
         result['header']=header
         result['footer']=footer
@@ -2128,7 +2130,8 @@ module SalaryMailPlugin
         img_base64 =data #map['data'].toString
         #html =html #map['html'].toString
         topic=subject #map['subject'].toString
-        puts html
+        
+        
         #toDolist :要增加判断传递过来的流是否base64及png
         #
         # p 'index:'+index.to_s
@@ -2153,6 +2156,8 @@ module SalaryMailPlugin
           # host=sheet.Cells(3, 2).value.to_s
           # port=sheet.Cells(4, 2).value.to_i.to_s #变成了25.0 保存前加 '
           header=sheet.Cells(25, 2).value
+          header=header.gsub("{#姓名#}","#{name}")
+
           footer=sheet.Cells(26, 2).value
         end
         header="您好，以下是您的工资单，请查收！" if header.nil?
@@ -2262,10 +2267,38 @@ module SalaryMailPlugin
 
         if errmsg.include?"535"
            errmsg='密码或邮箱或设置可能不正确 '+errmsg 
-        elsif errmsg.include?"554"
-           errmsg='发送频率过高或被当成垃圾邮件 '+errmsg
-        elsif errmsg.include?"550"
-           errmsg='邮箱地址不对或超出邮件商每天额度或邮箱已满 '+errmsg
+        elsif errmsg.include?"DT:SPM" or errmsg.include?"content rejected" or errmsg.include?"Mail content denied" or errmsg.include?"spam" 
+           errmsg='被邮件服务器当成垃圾邮件拒绝 '+errmsg
+        elsif errmsg.include?"Connection denied"
+           errmsg='连接频率过高被拒绝 '+errmsg
+        elsif errmsg.include?"Ip frequency limited" or errmsg.include?"Connection frequency limited"
+           errmsg='此IP发送频率过高被限制 '+errmsg 
+        elsif errmsg.include?"Domain frequency limited"
+           errmsg='此域名发送频率过高被限制 '+errmsg 
+        elsif errmsg.include?"sender frequency limited"
+           errmsg='发件人发送频率过高被限制 '+errmsg  
+        elsif errmsg.include?"Daily sending quota exceeded"
+           errmsg='超过邮件服务器每日发送额度 '+errmsg          
+        elsif errmsg.include?"550 Mailbox unavailable"
+           errmsg='邮箱地址无效或拒绝 '+errmsg
+        elsif errmsg.include?"Mailbox not found" or errmsg.include?"Invalid User" or errmsg.include?"User not found" or errmsg.include?"User unknown" or errmsg.include?"No such user"
+           errmsg='收件人邮箱不存在 '+errmsg  
+        elsif errmsg.include?"Bad Email Address"
+           errmsg='无效的收件人地址 '+errmsg    
+        elsif errmsg.include?"Your mailbox is full"
+           errmsg='您的邮箱空间已满 '+errmsg   
+        elsif errmsg.include?"bad syntax"
+           errmsg='收件人地址不正确 '+errmsg   
+        elsif errmsg.include?"mailbox unavailable"
+           errmsg='邮箱无效 '+errmsg
+        elsif errmsg.include?"Mailbox Is Inactive"
+           errmsg='收件人账号未开通 '+errmsg   
+        elsif errmsg.include?"mailbox name not allowed"
+           errmsg='不允许的邮箱名称 '+errmsg 
+        elsif errmsg.include?"Service not available"
+           errmsg='邮箱服务器暂时不可用 '+errmsg 
+        elsif errmsg.include?"Connection timed out"
+           errmsg='连接超时 '+errmsg  
         elsif errmsg.include?"553"
            errmsg='发送邮箱地址被拒绝或不允许的邮箱名称 '+errmsg 
         elsif errmsg.include?"500"
@@ -2273,7 +2306,7 @@ module SalaryMailPlugin
         elsif errmsg.include?"501"
            errmsg='不正确的邮箱地址 '+errmsg     
         elsif errmsg.include?"451"
-           errmsg='邮箱服务器已经关闭或请求邮件操作被中止 '+errmsg            
+           errmsg='邮箱服务器已经关闭或请求邮件操作被中止 '+errmsg  
         else
            puts "未知"
         end
@@ -2284,7 +2317,7 @@ module SalaryMailPlugin
 
         puts (result.to_json)
  
-        if result['msg'].include?"554" or result['msg'].include?"550"
+        if result['msg'].include?"DT:SPM" or result['msg'].include?"content rejected" or result['msg'].include?"frequency limited" or result['msg'].include?"spam" or result['msg'].include?"Mail content denied" or result['msg'].include?"Connection denied" 
            @fatalcnt=0 if @fatalcnt.nil?
            @fatalcnt+=1
            
@@ -2343,7 +2376,7 @@ module SalaryMailPlugin
       result["msg"]="End"
 
       @fatalcnt=0 if @fatalcnt.nil?
-      if @fatalcnt>3
+      if @fatalcnt>5
            result['result']="fatal"
            result['msg']="出错:发送邮件多次出错，可能超出邮件服务商发送频率限制，将中止发送！" #,已发送#{index}/共#{length}人
       end 
