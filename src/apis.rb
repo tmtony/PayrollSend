@@ -2177,7 +2177,7 @@ module SalaryMailPlugin
               host=host.gsub(" ","") #替换掉空格
           end
           subject = "#{name},#{topic}"
-          body = "<br><br> &nbsp;&nbsp;<b> #{header}</b> <br><br> "
+          body = "<br><br> &nbsp;&nbsp;<b> #{name},#{header}</b> <br><br> "
           if !html.empty?
              body = body + "&nbsp;&nbsp;&nbsp;&nbsp;<br>#{html}" 
           else  
