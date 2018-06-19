@@ -648,6 +648,7 @@ module KSO_SDK::View
         self.setVisible(false)
         @onCloseClicked.call() unless @onCloseClicked.nil?
         context.hidden = true
+        KSO_SDK::disableAutoStart(context)
         info_collect.infoCollect({:action=>"script_close"})
       end
       KSO_SDK.getCurrentMainWindow().installEventFilter(self)
