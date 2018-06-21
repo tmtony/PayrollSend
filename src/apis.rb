@@ -744,8 +744,8 @@ module SalaryMailPlugin
                                      :domain => 'localhost.localdomain',
                                      :user_name => account,
                                      :password => pwd,
-                                     :open_timeout         => 15,
-                                     :read_timeout         =>15,
+                                     :open_timeout         => 25,
+                                     :read_timeout         =>25,
                                      :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                                     }
                     )
@@ -763,8 +763,8 @@ module SalaryMailPlugin
                                    :ssl => isssl,
                                    :authentication       => 'login',
                                    :enable_starttls_auto => true,
-                                   :open_timeout         => 15,
-                                   :read_timeout         =>15,
+                                   :open_timeout         => 25,
+                                   :read_timeout         =>25,
                                    :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                                   }
                   )
@@ -2206,7 +2206,7 @@ module SalaryMailPlugin
                                  :domain => 'localhost.localdomain',
                                  :user_name => account,
                                  :password => pwd,
-                                 :read_timeout         =>15,
+                                 :read_timeout         =>25,
                                  :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                                 }
                 )
@@ -2224,7 +2224,7 @@ module SalaryMailPlugin
                                :ssl => isssl,
                                :authentication       => 'login',
                                :enable_starttls_auto => true,
-                               :read_timeout         =>15,
+                               :read_timeout         =>25,
                                :openssl_verify_mode  => 'none'  #wps邮箱必须加这个
                               }
               )
