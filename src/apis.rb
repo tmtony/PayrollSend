@@ -253,7 +253,7 @@ module SalaryMailPlugin
      
             result={}
             rng=GetRange()
-            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet #.Sheets(1)
+            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet  
             if rng!=false
                 result['namerange']="" #姓名位置
                 sheet=AddWorkSheet('KSO_Salary_Config',false,true)
@@ -309,7 +309,7 @@ module SalaryMailPlugin
             result={}
             
             rng=GetRange()
-            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet #.Sheets(1)
+            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet  
             if rng!=false
                   result['emailrange']=""
 
@@ -1087,7 +1087,7 @@ module SalaryMailPlugin
       puts (__method__.to_s)
       begin
 
-        sheet=KSO_SDK::Application.ActiveWorkbook.Sheets(1)
+        sheet=KSO_SDK::Application.ActiveWorkbook.ActiveSheet
         if data.class.to_s=="Array" #datalistArray
           data.delete_if {|x| x["selected"]==0} if justSel
           cnt=data.size
@@ -1383,7 +1383,7 @@ module SalaryMailPlugin
   
           if emailCol>0 && nameCol>0
 
-            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet #.Sheets(1)
+            salarySheet=KSO_SDK::Application.ActiveWorkbook.Activesheet  
             endRow=salarySheet.Cells(20000, nameCol).End(-4162).Row #dataEndRow=sheet.Cells(65536, nameCol).End(3).Row
             endRow=10000 if endRow>10000
             while startRow<=endRow
@@ -1444,7 +1444,7 @@ module SalaryMailPlugin
           p oldrowName
           p oldcolName
 
-          sheetSalary=KSO_SDK::Application.ActiveWorkbook.Activesheet #.Sheets(1)
+          sheetSalary=KSO_SDK::Application.ActiveWorkbook.Activesheet  
           puts
 
           puts sheetSalary.cells(oldrowName,oldcolName).value
@@ -1484,7 +1484,7 @@ module SalaryMailPlugin
 
         # todo 当 address = '' 时，返回标准模板， address != '' 时，按照id值返回模板
 
-        sheetSalary=KSO_SDK::Application.ActiveWorkbook.ActiveSheet #.Sheets(1)
+        sheetSalary=KSO_SDK::Application.ActiveWorkbook.ActiveSheet  
         nameRow=0
         nameRow=sheetSalary.range(address).row if !address.empty?
 
@@ -1506,6 +1506,27 @@ module SalaryMailPlugin
 
 
         if !sheet.nil?
+
+          nameCol=0
+          emailCol=0
+ 
+          if sheet.Cells(15, 2).value.to_s != ''
+             rng=sheetSalary.range(sheet.Cells(15, 2).value).offset(1,0) 
+             nameCol=rng.column
+          end   
+
+          if sheet.Cells(16, 2).value.to_s != ''
+             rng=sheetSalary.range(sheet.Cells(16, 2).value).offset(1,0) 
+             emailCol=rng.column
+          end 
+
+          if nameCol>0
+            result['name']=sheetSalary.Cells(nameRow, nameCol).value.to_s 
+          end   
+          if emailCol>0
+            result['email']=sheetSalary.Cells(nameRow, emailCol).value.to_s 
+          end  
+
 
           jsdata=sheet.Cells(17, 2).value
           if !jsdata.nil? && !jsdata.empty?
@@ -1548,7 +1569,7 @@ module SalaryMailPlugin
         puts ("出错位置:"+e.backtrace.inspect)
       ensure
 
-
+      	puts ("loadEmailContent3")  
         puts (result.to_json)
         return result.to_json
   
@@ -1718,10 +1739,10 @@ module SalaryMailPlugin
           if sheet.Cells(7, 2).value == '' or sheet.Cells(7, 2).value.nil?
               msg=msg+' 表头区域未设置'
           end 
-          if sheet.Cells(10, 2).value == '' or sheet.Cells(10, 2).value.nil?
+          if sheet.Cells(15, 2).value == '' or sheet.Cells(15, 2).value.nil?
               msg=msg+' 姓名列未设置'
           end 
-          if sheet.Cells(11, 2).value == '' or sheet.Cells(11, 2).value.nil?
+          if sheet.Cells(16, 2).value == '' or sheet.Cells(16, 2).value.nil?
               msg=msg+' 邮箱列未设置'
           end  
  
@@ -2106,39 +2127,18 @@ module SalaryMailPlugin
 
     #发送邮件开始
     def sendStart(id,name,index,length,address,email,data,html,subject)
-      # if !@webWidget.nil?
-      #     @webWidget.close()
-      # end
-      # url="http://www.baidu.com"
-      # puts url
-      # puts $mainctrl
-      # puts $mainctrl.webviewWidget
-      # puts $mainctrl.jsObj
-      # $mainctrl.webviewWidget.showWebView(url,$mainctrl.jsObj)
-      # return
- 
+
 
       puts (__method__.to_s)
       # todo 每一次发送都需要检测发送限制数量，超限不发
       result={}
       begin
-        #address=address
-
-        # id=id #map['id'].toInt
-        # name=name #map['name'].toString
-        # index=index #map['index'].toInt
-        # length=length #map['length'].toInt
+ 
         receiver=email #map['email'].toString
         img_base64 =data #map['data'].toString
-        #html =html #map['html'].toString
+ 
         topic=subject #map['subject'].toString
-        
-        
-        #toDolist :要增加判断传递过来的流是否base64及png
-        #
-        # p 'index:'+index.to_s
-        # p 'length:'+length.to_s
-        # 
+ 
         if index==1
             @fatalcnt=0
         end   
